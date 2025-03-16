@@ -122,6 +122,7 @@ class ApiService {
       printLog("fcm.google error :=====> $error");
     }
   }
+
   /* *************** Send FCM PushNotification END */
 
   // general_setting API
@@ -434,6 +435,64 @@ class ApiService {
     dataModel = SuccessModel.fromJson(response.data);
     return dataModel;
   }
+
+// دالة لإضافة أو إزالة الإعجاب باستخدام Dio
+  Future<SuccessModel> addRemoveLike({
+    required int videoId,
+    required int videoType,
+    required int subVideoType,
+  }) async {
+    printLog("addRemoveLike userID :====> ${Constant.userID}");
+    printLog("addRemoveLike videoID :====> $videoId");
+
+    SuccessModel dataModel;
+    String apiName = "add_remove_like";
+
+    Response response = await dio.post(
+      '$baseUrl$apiName',
+      options: optHeaders,
+      data: {
+        'user_id': Constant.userID ?? 0,
+        'video_type': videoType,
+        'sub_video_type': subVideoType,
+        'video_id': videoId,
+      },
+    );
+
+    dataModel = SuccessModel.fromJson(response.data);
+    return dataModel;
+  }
+
+//   addComment
+  Future<SuccessModel> addComment({
+    required int videoId,
+    required String comment,
+    required int videoType,
+    required int subVideoType,
+  }) async {
+    printLog("addComment userID :====> ${Constant.userID}");
+    printLog("addComment videoID :====> $videoId");
+    printLog("addComment content :====> $comment");
+
+    SuccessModel dataModel;
+    String apiName = "add_comment";
+
+    Response response = await dio.post(
+      '$baseUrl$apiName',
+      options: optHeaders,
+      data: {
+        'user_id': Constant.userID ?? 0,
+        'video_type': videoType,
+        'sub_video_type': subVideoType,
+        'video_id': videoId,
+        'comment': comment,
+      },
+    );
+
+    dataModel = SuccessModel.fromJson(response.data);
+    return dataModel;
+  }
+
 
   // get_device_sync_list API
   Future<DeviceSyncModel> getDeviceSyncList() async {
@@ -1586,5 +1645,4 @@ Future<void> prepareShowDownload(
     if (!context.mounted) return;
     Utils.showToast("Download failed");
   }
-}
-/* ========================== Download Shows ========================== */
+} /* ========================== Download Shows ========================== */

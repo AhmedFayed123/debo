@@ -5,92 +5,79 @@ import 'package:yourappname/utils/utils.dart';
 
 class EpisodeProvider extends ChangeNotifier {
   EpisodeBySeasonModel episodeBySeasonModel = EpisodeBySeasonModel();
-  List<Result> episodeList = []; // قائمة الحلقات المعروضة
+  List<Result>? episodeList = [];
 
   bool loading = false;
+
+  /* Post Pagination */
   bool loadMore = false;
   int? totalRows, totalPage, currentPage;
   bool? isMorePage;
 
-  // يتم تعيين حالة التحميل
   setLoading(bool isLoading) {
     loading = isLoading;
     notifyListeners();
   }
 
-  // جلب الحلقات بناءً على الموسم
-  Future<void> getEpisodeBySeason(seasonId, showId, int pageNo) async {
-    print("🔹 Start fetching episodes...");
-
-    // إذا كانت الصفحة 1، قم بتفريغ قائمة الحلقات
+  Future<void> getEpisodeBySeason(seasonId, showId, pageNo) async {
+    printLog("getEpisodeBySeason seasonId =====> $seasonId");
+    printLog("getEpisodeBySeason showId =======> $showId");
+    printLog("getEpisodeBySeason pageNo =======> $pageNo");
     if (pageNo == 1) {
-      episodeList.clear();
+      episodeList?.clear();
+      episodeList = [];
     }
-
     loading = true;
-    notifyListeners();
-
-    // استدعاء API لجلب الحلقات
-    episodeBySeasonModel = await ApiService().episodeBySeason(seasonId, showId, pageNo);
-
-    print("✅ API response received!");
-
-    // التحقق من استجابة الـ API
+    episodeBySeasonModel = EpisodeBySeasonModel();
+    episodeBySeasonModel =
+    await ApiService().episodeBySeason(seasonId, showId, pageNo);
+    printLog(
+        "episodeBySeasonModel length :=1=> ${(episodeBySeasonModel.result?.length ?? 0)}");
     if (episodeBySeasonModel.status == 200) {
       setPagination(
-        episodeBySeasonModel.totalRows,
-        episodeBySeasonModel.totalPage,
-        episodeBySeasonModel.currentPage,
-        episodeBySeasonModel.morePage,
-      );
-
-      // التحقق إذا كانت هناك حلقات جديدة
-      if (episodeBySeasonModel.result != null && episodeBySeasonModel.result!.isNotEmpty) {
-        List<Result> newEpisodes = episodeBySeasonModel.result!;
-
-        // عكس ترتيب الحلقات الجديدة ليكون التصاعدي
-        newEpisodes = newEpisodes.reversed.toList();
-
-        // في حالة كان الصفحة الحالية هي الصفحة الأخيرة، يتم تعيين الحلقات الجديدة
-        if (pageNo == totalPage) {
-          episodeList = newEpisodes;
-        } else {
-          // إذا لم تكن الصفحة الأخيرة، يتم إضافة الحلقات الجديدة في بداية القائمة
-          episodeList.insertAll(0, newEpisodes);
+          episodeBySeasonModel.totalRows,
+          episodeBySeasonModel.totalPage,
+          episodeBySeasonModel.currentPage,
+          episodeBySeasonModel.morePage);
+      if (episodeBySeasonModel.result != null &&
+          (episodeBySeasonModel.result?.length ?? 0) > 0) {
+        printLog(
+            "episodeBySeasonModel length :=2=> ${(episodeBySeasonModel.result?.length ?? 0)}");
+        for (var i = 0; i < (episodeBySeasonModel.result?.length ?? 0); i++) {
+          episodeList?.add(episodeBySeasonModel.result?[i] ?? Result());
         }
-
-        print("🎬 Episodes loaded: ${episodeList.length}");
-
+        final Map<int, Result> postMap = {};
+        episodeList?.forEach((item) {
+          postMap[item.id ?? 0] = item;
+        });
+        episodeList = postMap.values.toList();
         await setLoadMore(false);
+        printLog(
+            "episodeBySeasonModel length :=3=> ${(episodeBySeasonModel.result?.length ?? 0)}");
       } else {
-        print("⚠ No episodes found!");
         await setLoadMore(false);
       }
     } else {
-      print("❌ API call failed!");
       await setLoadMore(false);
     }
-
     loading = false;
     notifyListeners();
-    print("🔻 Finished loading episodes.");
   }
 
-  // تعيين حالة تحميل المزيد
-  setLoadMore(bool loadMore) {
+  setLoadMore(loadMore) {
     printLog("setLoadMore loadMore :=> $loadMore");
     this.loadMore = loadMore;
     notifyListeners();
   }
 
-  // مسح البيانات القديمة
   clearOldData() {
-    episodeList.clear();
+    episodeList?.clear();
+    episodeList = [];
     notifyListeners();
   }
 
-  // تعيين بيانات الـ pagination
-  setPagination(int? totalRows, int? totalPage, int? currentPage, bool? morePage) {
+  setPagination(
+      int? totalRows, int? totalPage, int? currentPage, bool? morePage) {
     printLog("setPagination currentPage :==> $currentPage");
     printLog("setPagination totalRows :====> $totalRows");
     printLog("setPagination totalPage :====> $totalPage");
@@ -102,7 +89,6 @@ class EpisodeProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // مسح بيانات الـ provider
   clearProvider() {
     printLog("<================ clearProvider ================>");
     episodeBySeasonModel = EpisodeBySeasonModel();

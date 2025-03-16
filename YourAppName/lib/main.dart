@@ -7,7 +7,9 @@ import 'package:yourappname/model/download_item.dart';
 import 'package:yourappname/pages/splash.dart';
 import 'package:yourappname/provider/avatarprovider.dart';
 import 'package:yourappname/provider/bottombarprovider.dart';
+import 'package:yourappname/provider/comment_provider.dart';
 import 'package:yourappname/provider/connectivityprovider.dart';
+import 'package:yourappname/provider/like_provider.dart';
 import 'package:yourappname/provider/myspaceprovider.dart';
 import 'package:yourappname/provider/sectionviewallprovider.dart';
 import 'package:yourappname/provider/subhistoryprovider.dart';
@@ -147,6 +149,9 @@ Future<void> main() async {
         ChangeNotifierProvider(create: (_) => VideoDetailsProvider()),
         ChangeNotifierProvider(create: (_) => VideoDownloadProvider()),
         ChangeNotifierProvider(create: (_) => WatchlistProvider()),
+        ChangeNotifierProvider(create: (context) => LikeProvider()),
+        ChangeNotifierProvider(create: (_) => CommentProvider()),
+
       ],
       child: const MyApp(),
     ),

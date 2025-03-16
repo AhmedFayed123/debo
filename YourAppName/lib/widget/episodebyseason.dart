@@ -34,17 +34,17 @@ class EpisodeBySeason extends StatefulWidget {
   final Result? sectionDetails;
   final String? newPage, oldPage, reqText;
   const EpisodeBySeason(
-    this.videoId,
-    this.upcomingType,
-    this.typeId,
-    this.seasonPos,
-    this.seasonList,
-    this.sectionDetails, {
-    super.key,
-    required this.newPage,
-    required this.oldPage,
-    required this.reqText,
-  });
+      this.videoId,
+      this.upcomingType,
+      this.typeId,
+      this.seasonPos,
+      this.seasonList,
+      this.sectionDetails, {
+        super.key,
+        required this.newPage,
+        required this.oldPage,
+        required this.reqText,
+      });
 
   @override
   State<EpisodeBySeason> createState() => _EpisodeBySeasonState();
@@ -107,44 +107,20 @@ class _EpisodeBySeasonState extends State<EpisodeBySeason> {
   getAllEpisode() async {
     printLog("seasonPos =====EpisodeBySeason=======> ${widget.seasonPos}");
     printLog("videoId =======EpisodeBySeason=======> ${widget.videoId}");
-
     if ((episodeProvider.currentPage ?? 0) == 0) {
       await episodeProvider.setLoading(true);
     } else {
       await episodeProvider.setLoadMore(true);
     }
-
-    subscriptionStatus = await Utils.configByStatus(status: Constant.subscriptionStatus);
+    subscriptionStatus =
+    await Utils.configByStatus(status: Constant.subscriptionStatus);
     printLog('getAllEpisode subscriptionStatus ===> $subscriptionStatus');
 
-    // ✅ ضبط تحميل الحلقات بشكل صحيح
-    if (episodeProvider.currentPage == null || episodeProvider.currentPage == 0) {
-      episodeProvider.currentPage = episodeProvider.totalPage ?? 1;
-    }
-
-    int nextPage = (episodeProvider.currentPage ?? episodeProvider.totalPage ?? 1);
-    if (nextPage > 1) nextPage--;
-
-    if (nextPage < 1) {
-      printLog("⛔ لا يوجد المزيد من الحلقات للتحميل!");
-      return;
-    }
-
-    // ✅ جلب الحلقات
     await episodeProvider.getEpisodeBySeason(
-      widget.seasonList?[(widget.seasonPos ?? 0)].id ?? 0,
-      widget.videoId,
-      nextPage,
-    );
-
-    // ✅ التحقق من أن القائمة تحتوي على بيانات قبل التحديث
-    if (episodeProvider.episodeList.isNotEmpty) {
-      // ✅ تمرير القائمة كما هي إلى showDetailsProvider (بدون عكس ترتيبها)
-      await showDetailsProvider.setEpisodeBySeason(episodeProvider.episodeList);
-    }
-
-    episodeProvider.currentPage = nextPage;
-
+        widget.seasonList?[(widget.seasonPos ?? 0)].id ?? 0,
+        widget.videoId,
+        ((episodeProvider.currentPage ?? 0) + 1));
+    await showDetailsProvider.setEpisodeBySeason(episodeProvider.episodeList);
     Future.delayed(Duration.zero).then((value) {
       if (!mounted) return;
       setState(() {});
@@ -170,14 +146,14 @@ class _EpisodeBySeasonState extends State<EpisodeBySeason> {
       horizontalGridSpacing: 8,
       minItemsPerRow: 1,
       maxItemsPerRow:
-          (kIsWeb && MediaQuery.of(context).size.width > 720) ? 2 : 1,
+      (kIsWeb && MediaQuery.of(context).size.width > 720) ? 2 : 1,
       listViewBuilderOptions: ListViewBuilderOptions(
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
       ),
       children: List.generate(
         (episodeProvider.episodeList?.length ?? 0),
-        (position) {
+            (position) {
           return ExpandableNotifier(
             child: Wrap(
               children: [
@@ -230,33 +206,33 @@ class _EpisodeBySeasonState extends State<EpisodeBySeason> {
                                   ),
                                 ),
                                 (episodeProvider.episodeList?[position]
-                                                .videoDuration !=
-                                            null &&
-                                        (episodeProvider.episodeList?[position]
-                                                    .stopTime ??
-                                                0) >
-                                            0)
+                                    .videoDuration !=
+                                    null &&
+                                    (episodeProvider.episodeList?[position]
+                                        .stopTime ??
+                                        0) >
+                                        0)
                                     ? Container(
-                                        height: 2,
-                                        width: 32,
-                                        margin: const EdgeInsets.only(top: 8),
-                                        child: LinearPercentIndicator(
-                                          padding: const EdgeInsets.all(0),
-                                          barRadius: const Radius.circular(2),
-                                          lineHeight: 2,
-                                          percent: Utils.getPercentage(
-                                              episodeProvider
-                                                      .episodeList?[position]
-                                                      .videoDuration ??
-                                                  0,
-                                              episodeProvider
-                                                      .episodeList?[position]
-                                                      .stopTime ??
-                                                  0),
-                                          backgroundColor: secProgressColor,
-                                          progressColor: colorPrimary,
-                                        ),
-                                      )
+                                  height: 2,
+                                  width: 32,
+                                  margin: const EdgeInsets.only(top: 8),
+                                  child: LinearPercentIndicator(
+                                    padding: const EdgeInsets.all(0),
+                                    barRadius: const Radius.circular(2),
+                                    lineHeight: 2,
+                                    percent: Utils.getPercentage(
+                                        episodeProvider
+                                            .episodeList?[position]
+                                            .videoDuration ??
+                                            0,
+                                        episodeProvider
+                                            .episodeList?[position]
+                                            .stopTime ??
+                                            0),
+                                    backgroundColor: secProgressColor,
+                                    progressColor: colorPrimary,
+                                  ),
+                                )
                                     : const SizedBox.shrink(),
                               ],
                             ),
@@ -269,7 +245,7 @@ class _EpisodeBySeasonState extends State<EpisodeBySeason> {
                                   MyText(
                                     color: titleTextColor,
                                     text: episodeProvider
-                                            .episodeList?[position].name ??
+                                        .episodeList?[position].name ??
                                         "-",
                                     textalign: TextAlign.start,
                                     fontstyle: FontStyle.normal,
@@ -283,7 +259,7 @@ class _EpisodeBySeasonState extends State<EpisodeBySeason> {
                                   MyText(
                                     color: descTextColor,
                                     text: episodeProvider.episodeList?[position]
-                                            .description ??
+                                        .description ??
                                         "",
                                     textalign: TextAlign.start,
                                     fontsizeNormal: 12,
@@ -298,15 +274,15 @@ class _EpisodeBySeasonState extends State<EpisodeBySeason> {
                                   MyText(
                                     color: colorPrimary,
                                     text: ((episodeProvider
-                                                    .episodeList?[position]
-                                                    .videoDuration ??
-                                                0) >
-                                            0)
+                                        .episodeList?[position]
+                                        .videoDuration ??
+                                        0) >
+                                        0)
                                         ? Utils.convertToColonText(
-                                            episodeProvider
-                                                    .episodeList?[position]
-                                                    .videoDuration ??
-                                                0)
+                                        episodeProvider
+                                            .episodeList?[position]
+                                            .videoDuration ??
+                                            0)
                                         : "-",
                                     textalign: TextAlign.start,
                                     fontsizeNormal: 11,
@@ -330,7 +306,7 @@ class _EpisodeBySeasonState extends State<EpisodeBySeason> {
                             height: Dimens.epiPoster,
                             width: MediaQuery.of(context).size.width,
                             imageUrl: (episodeProvider
-                                    .episodeList?[position].landscape ??
+                                .episodeList?[position].landscape ??
                                 ""),
                           ),
                           Container(
@@ -338,8 +314,8 @@ class _EpisodeBySeasonState extends State<EpisodeBySeason> {
                             child: MyText(
                               color: titleTextColor,
                               text:
-                                  episodeProvider.episodeList?[position].name ??
-                                      "",
+                              episodeProvider.episodeList?[position].name ??
+                                  "",
                               textalign: TextAlign.start,
                               fontstyle: FontStyle.normal,
                               fontsizeNormal: 14,
@@ -354,7 +330,7 @@ class _EpisodeBySeasonState extends State<EpisodeBySeason> {
                             child: MyText(
                               color: descTextColor,
                               text: episodeProvider
-                                      .episodeList?[position].description ??
+                                  .episodeList?[position].description ??
                                   "",
                               textalign: TextAlign.start,
                               fontstyle: FontStyle.normal,
@@ -373,13 +349,13 @@ class _EpisodeBySeasonState extends State<EpisodeBySeason> {
                                 MyText(
                                   color: descTextColor,
                                   text: ((episodeProvider.episodeList?[position]
-                                                  .videoDuration ??
-                                              0) >
-                                          0)
+                                      .videoDuration ??
+                                      0) >
+                                      0)
                                       ? Utils.convertTimeToText(episodeProvider
-                                              .episodeList?[position]
-                                              .videoDuration ??
-                                          0)
+                                      .episodeList?[position]
+                                      .videoDuration ??
+                                      0)
                                       : "-",
                                   textalign: TextAlign.start,
                                   fontsizeNormal: 12,
@@ -390,8 +366,8 @@ class _EpisodeBySeasonState extends State<EpisodeBySeason> {
                                   fontstyle: FontStyle.normal,
                                 ),
                                 if ((episodeProvider
-                                            .episodeList?[position].isPremium ??
-                                        0) ==
+                                    .episodeList?[position].isPremium ??
+                                    0) ==
                                     1)
                                   Container(
                                     margin: const EdgeInsets.only(left: 10),
@@ -459,7 +435,7 @@ class _EpisodeBySeasonState extends State<EpisodeBySeason> {
                 clipBehavior: Clip.antiAliasWithSaveLayer,
                 child: MyNetworkImage(
                   imageUrl:
-                      (episodeProvider.episodeList?[position].landscape ?? ""),
+                  (episodeProvider.episodeList?[position].landscape ?? ""),
                   fit: BoxFit.cover,
                   height: MediaQuery.of(context).size.height,
                   width: MediaQuery.of(context).size.width,
@@ -514,8 +490,8 @@ class _EpisodeBySeasonState extends State<EpisodeBySeason> {
                                     clipBehavior: Clip.antiAliasWithSaveLayer,
                                     child: MyNetworkImage(
                                       imageUrl: (episodeProvider
-                                              .episodeList?[position]
-                                              .landscape ??
+                                          .episodeList?[position]
+                                          .landscape ??
                                           ""),
                                       fit: BoxFit.cover,
                                       height: Dimens.isBigScreen(context)
@@ -537,11 +513,11 @@ class _EpisodeBySeasonState extends State<EpisodeBySeason> {
                                     ),
                                   ),
                                   if ((episodeProvider.episodeList?[position]
-                                                  .stopTime ??
-                                              0) >
-                                          0 &&
+                                      .stopTime ??
+                                      0) >
+                                      0 &&
                                       episodeProvider.episodeList?[position]
-                                              .videoDuration !=
+                                          .videoDuration !=
                                           null)
                                     Positioned(
                                       left: 2,
@@ -550,19 +526,19 @@ class _EpisodeBySeasonState extends State<EpisodeBySeason> {
                                       child: Container(
                                         height: 4,
                                         constraints:
-                                            const BoxConstraints(minWidth: 0),
+                                        const BoxConstraints(minWidth: 0),
                                         child: LinearPercentIndicator(
                                           padding: const EdgeInsets.all(0),
                                           barRadius: const Radius.circular(2),
                                           lineHeight: 4,
                                           percent: Utils.getPercentage(
                                               episodeProvider
-                                                      .episodeList?[position]
-                                                      .videoDuration ??
+                                                  .episodeList?[position]
+                                                  .videoDuration ??
                                                   0,
                                               episodeProvider
-                                                      .episodeList?[position]
-                                                      .stopTime ??
+                                                  .episodeList?[position]
+                                                  .stopTime ??
                                                   0),
                                           backgroundColor: secProgressColor,
                                           progressColor: colorAccent,
@@ -580,7 +556,7 @@ class _EpisodeBySeasonState extends State<EpisodeBySeason> {
                                   MyText(
                                     color: titleTextColor,
                                     text: episodeProvider
-                                            .episodeList?[position].name ??
+                                        .episodeList?[position].name ??
                                         "",
                                     fontweight: FontWeight.w500,
                                     fontsizeNormal: 14,
@@ -597,17 +573,17 @@ class _EpisodeBySeasonState extends State<EpisodeBySeason> {
                                         MyText(
                                           color: descTextColor,
                                           text: ((episodeProvider
-                                                          .episodeList?[
-                                                              position]
-                                                          .videoDuration ??
-                                                      0) >
-                                                  0)
+                                              .episodeList?[
+                                          position]
+                                              .videoDuration ??
+                                              0) >
+                                              0)
                                               ? Utils.convertInMin(
-                                                  episodeProvider
-                                                          .episodeList?[
-                                                              position]
-                                                          .videoDuration ??
-                                                      0)
+                                              episodeProvider
+                                                  .episodeList?[
+                                              position]
+                                                  .videoDuration ??
+                                                  0)
                                               : "-",
                                           textalign: TextAlign.start,
                                           fontsizeNormal: 12,
@@ -618,13 +594,13 @@ class _EpisodeBySeasonState extends State<EpisodeBySeason> {
                                           fontstyle: FontStyle.normal,
                                         ),
                                         if ((episodeProvider
-                                                    .episodeList?[position]
-                                                    .isPremium ??
-                                                0) ==
+                                            .episodeList?[position]
+                                            .isPremium ??
+                                            0) ==
                                             1)
                                           Container(
                                             margin:
-                                                const EdgeInsets.only(left: 10),
+                                            const EdgeInsets.only(left: 10),
                                             child: MyText(
                                               color: colorPrimary,
                                               text: "primetag",
@@ -647,8 +623,8 @@ class _EpisodeBySeasonState extends State<EpisodeBySeason> {
                                       child: MyText(
                                         color: descTextColor,
                                         text: episodeProvider
-                                                .episodeList?[position]
-                                                .description ??
+                                            .episodeList?[position]
+                                            .description ??
                                             "",
                                         fontsizeNormal: 13,
                                         fontsizeWeb: 14,
@@ -781,7 +757,7 @@ class _EpisodeBySeasonState extends State<EpisodeBySeason> {
         return const SizedBox.shrink();
       }
     } else if ((showDetailsProvider.contentDetailModel.result?[0].isRent ??
-            0) ==
+        0) ==
         1) {
       if ((showDetailsProvider.contentDetailModel.result?[0].rentBuy ?? 0) ==
           1) {
@@ -796,7 +772,7 @@ class _EpisodeBySeasonState extends State<EpisodeBySeason> {
 
   Widget _buildDownloadBtn({required int position}) {
     if (episodeProvider.episodeList?[position].videoUploadType ==
-            "server_video" ||
+        "server_video" ||
         episodeProvider.episodeList?[position].videoUploadType == "external") {
       return Consumer2<ShowDetailsProvider, ShowDownloadProvider>(
         builder: (context, showDetailsProvider, downloadProvider, child) {
@@ -804,9 +780,9 @@ class _EpisodeBySeasonState extends State<EpisodeBySeason> {
           if (!kIsWeb) {
             if (episodeBox.isOpen && episodeBox.values.toList().isNotEmpty) {
               List<EpisodeItem> myEpisodeList =
-                  episodeBox.values.where((episodeItem) {
+              episodeBox.values.where((episodeItem) {
                 return (episodeItem.id ==
-                        episodeProvider.episodeList?[position].id &&
+                    episodeProvider.episodeList?[position].id &&
                     episodeItem.showId ==
                         episodeProvider.episodeList?[position].showId);
               }).toList();
@@ -831,7 +807,7 @@ class _EpisodeBySeasonState extends State<EpisodeBySeason> {
                 if (Constant.userID != null) {
                   if (!isInDownload) {
                     if ((downloadProvider.dProgress == 0 ||
-                            downloadProvider.dProgress == -1) &&
+                        downloadProvider.dProgress == -1) &&
                         !downloadProvider.loading &&
                         (downloadProvider.itemId == null ||
                             downloadProvider.itemId == 0)) {
@@ -849,32 +825,32 @@ class _EpisodeBySeasonState extends State<EpisodeBySeason> {
               child: Container(
                 padding: const EdgeInsets.all(3.0),
                 child: (downloadProvider.dProgress != 0 &&
-                        downloadProvider.dProgress > 0 &&
-                        downloadProvider.dProgress < 100 &&
-                        !isInDownload &&
-                        (downloadProvider.itemId ==
-                            episodeProvider.episodeList?[position].id))
+                    downloadProvider.dProgress > 0 &&
+                    downloadProvider.dProgress < 100 &&
+                    !isInDownload &&
+                    (downloadProvider.itemId ==
+                        episodeProvider.episodeList?[position].id))
                     ? Container(
-                        alignment: Alignment.center,
-                        child: CircularPercentIndicator(
-                          radius: (Dimens.featureIconSize / 2),
-                          lineWidth: 2.0,
-                          percent:
-                              (downloadProvider.dProgress / 100).toDouble(),
-                          progressColor: complimentryColor,
-                        ),
-                      )
+                  alignment: Alignment.center,
+                  child: CircularPercentIndicator(
+                    radius: (Dimens.featureIconSize / 2),
+                    lineWidth: 2.0,
+                    percent:
+                    (downloadProvider.dProgress / 100).toDouble(),
+                    progressColor: complimentryColor,
+                  ),
+                )
                     : Container(
-                        alignment: Alignment.center,
-                        child: MyImage(
-                          width: Dimens.featureIconSize,
-                          height: Dimens.featureIconSize,
-                          color: defaultIconColor,
-                          imagePath: isInDownload
-                              ? "ic_download_done.png"
-                              : "ic_download.png",
-                        ),
-                      ),
+                  alignment: Alignment.center,
+                  child: MyImage(
+                    width: Dimens.featureIconSize,
+                    height: Dimens.featureIconSize,
+                    color: defaultIconColor,
+                    imagePath: isInDownload
+                        ? "ic_download_done.png"
+                        : "ic_download.png",
+                  ),
+                ),
               ),
             ),
           );
@@ -965,7 +941,7 @@ class _EpisodeBySeasonState extends State<EpisodeBySeason> {
                         await Navigator.of(context).push(
                           MaterialPageRoute(
                             builder: (context) =>
-                                const MyDownloads(viewFrom: ''),
+                            const MyDownloads(viewFrom: ''),
                           ),
                         );
                         setState(() {});
@@ -1207,30 +1183,30 @@ class _EpisodeBySeasonState extends State<EpisodeBySeason> {
         bool? isPrimiumUser = await Utils.checkSubsRentLogin(
           context: context,
           isPremium: episodeProvider
-                  .episodeList?[showDetailsProvider.mCurrentEpiPos].isPremium ??
+              .episodeList?[showDetailsProvider.mCurrentEpiPos].isPremium ??
               0,
           isBuy: episodeProvider
-                  .episodeList?[showDetailsProvider.mCurrentEpiPos].isPremium ??
+              .episodeList?[showDetailsProvider.mCurrentEpiPos].isPremium ??
               0,
           isRent: showDetailsProvider.contentDetailModel.result?[0].isRent ?? 0,
           rentBuy:
-              showDetailsProvider.contentDetailModel.result?[0].rentBuy ?? 0,
+          showDetailsProvider.contentDetailModel.result?[0].rentBuy ?? 0,
           videoId: (showDetailsProvider.contentDetailModel.result?[0].id ?? 0)
               .toString(),
           rentPrice:
-              (showDetailsProvider.contentDetailModel.result?[0].price ?? 0)
-                  .toString(),
+          (showDetailsProvider.contentDetailModel.result?[0].price ?? 0)
+              .toString(),
           vTitle: (showDetailsProvider.contentDetailModel.result?[0].name ?? 0)
               .toString(),
           typeId:
-              (showDetailsProvider.contentDetailModel.result?[0].typeId ?? 0)
-                  .toString(),
+          (showDetailsProvider.contentDetailModel.result?[0].typeId ?? 0)
+              .toString(),
           vType:
-              (showDetailsProvider.contentDetailModel.result?[0].videoType ?? 0)
-                  .toString(),
+          (showDetailsProvider.contentDetailModel.result?[0].videoType ?? 0)
+              .toString(),
           rentProductId:
-              (showDetailsProvider.contentDetailModel.result?[0].videoType ?? 0)
-                  .toString(),
+          (showDetailsProvider.contentDetailModel.result?[0].videoType ?? 0)
+              .toString(),
           newPage: widget.newPage ?? "",
           oldPage: widget.oldPage ?? "",
           reqText: widget.reqText ?? "",
@@ -1243,9 +1219,9 @@ class _EpisodeBySeasonState extends State<EpisodeBySeason> {
       int? epiID = (episodeList?[epiPos].id ?? 0);
       int? showID = (episodeList?[epiPos].showId ?? 0);
       int? vType =
-          (showDetailsProvider.contentDetailModel.result?[0].videoType ?? 0);
+      (showDetailsProvider.contentDetailModel.result?[0].videoType ?? 0);
       int? vSubType =
-          (showDetailsProvider.contentDetailModel.result?[0].subVideoType ?? 0);
+      (showDetailsProvider.contentDetailModel.result?[0].subVideoType ?? 0);
       int? vTypeID = widget.typeId;
       int? stopTime = (episodeList?[epiPos].stopTime ?? 0);
       String? vUploadType = (episodeList?[epiPos].videoUploadType ?? "");
@@ -1279,14 +1255,14 @@ class _EpisodeBySeasonState extends State<EpisodeBySeason> {
         playType: "Show",
         videoId: showID,
         videoTitle:
-            showDetailsProvider.contentDetailModel.result?[0].name ?? "",
+        showDetailsProvider.contentDetailModel.result?[0].name ?? "",
         videoType: vType,
         subVideoType: vSubType,
         typeId: vTypeID,
         episodeId: epiID,
         videoUrl: epiUrl,
         trailerUrl:
-            showDetailsProvider.contentDetailModel.result?[0].trailerUrl ?? "",
+        showDetailsProvider.contentDetailModel.result?[0].trailerUrl ?? "",
         uploadType: vUploadType,
         videoThumb: videoThumb,
         stopTime: stopTime,
@@ -1296,7 +1272,7 @@ class _EpisodeBySeasonState extends State<EpisodeBySeason> {
       if (!mounted) return;
       AdHelper.showFullscreenAd(context, Constant.interstialAdType, () async {
         dynamic isContinue =
-            await Utils.openPlayer(context: context, playerModel: playerModel);
+        await Utils.openPlayer(context: context, playerModel: playerModel);
 
         printLog("isContinue ===> $isContinue");
         if (isContinue != null && isContinue == true) {
@@ -1305,5 +1281,5 @@ class _EpisodeBySeasonState extends State<EpisodeBySeason> {
       });
     }
   }
-  /* ========= Open Player ========= */
+/* ========= Open Player ========= */
 }

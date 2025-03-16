@@ -35,10 +35,14 @@ import 'package:video_player/video_player.dart';
 import 'package:visibility_detector/visibility_detector.dart';
 import 'package:youtube_player_iframe/youtube_player_iframe.dart';
 
+import '../provider/comment_provider.dart';
+import '../provider/like_provider.dart';
+
 class WebContentShowDetails extends StatefulWidget {
   final String? newPage, oldPage;
   final dynamic reqText;
   final int videoId, subVideoType, videoType, typeId;
+
   const WebContentShowDetails(
     this.videoId,
     this.subVideoType,
@@ -166,35 +170,40 @@ class WebContentShowDetailsState extends State<WebContentShowDetails>
   Future<void> getAllEpisode(int position, List<Season>? seasonList) async {
     printLog("position ====> $position");
     printLog("seasonList seasonID ====> ${seasonList?[position].id}");
-
     await episodeProvider.clearOldData();
-
-    int lastPage = episodeProvider.totalPage ?? 1;
-    if (lastPage < 1) {
-      printLog("⛔ لا توجد صفحات متاحة!");
-      return;
-    }
-
-    // بدء التحميل من آخر صفحة وليس من 1
     await episodeProvider.getEpisodeBySeason(
-        seasonList?[position].id ?? 0, widget.videoId, lastPage);
-
-    // التحقق من أن الحلقات تم تحميلها بنجاح
-    if (episodeProvider.episodeBySeasonModel.status == 200 && episodeProvider.episodeList.isNotEmpty) {
-      // تحديث البيانات في showDetailsProvider بدون عكس الترتيب
-      await showDetailsProvider.setEpisodeBySeason(episodeProvider.episodeList);
-
-      // إعداد روابط الترجمة للحلقات الأولى
-      Utils.setSubtitleURLs(
-        subtitleUrl1: episodeProvider.episodeList.first.subtitle1 ?? "",
-        subtitleUrl2: episodeProvider.episodeList.first.subtitle2 ?? "",
-        subtitleUrl3: episodeProvider.episodeList.first.subtitle3 ?? "",
-        subtitleLang1: episodeProvider.episodeList.first.subtitleLang1 ?? "",
-        subtitleLang2: episodeProvider.episodeList.first.subtitleLang2 ?? "",
-        subtitleLang3: episodeProvider.episodeList.first.subtitleLang3 ?? "",
-      );
+        seasonList?[position].id ?? 0, widget.videoId, 1);
+    if (episodeProvider.episodeBySeasonModel.status == 200) {
+      if (episodeProvider.episodeList != null &&
+          (episodeProvider.episodeList?.length ?? 0) > 0) {
+        /* Set-up Subtitle URLs */
+        Utils.setSubtitleURLs(
+          subtitleUrl1: (episodeProvider
+                  .episodeList?[showDetailsProvider.mCurrentEpiPos].subtitle1 ??
+              ""),
+          subtitleUrl2: (episodeProvider
+                  .episodeList?[showDetailsProvider.mCurrentEpiPos].subtitle2 ??
+              ""),
+          subtitleUrl3: (episodeProvider
+                  .episodeList?[showDetailsProvider.mCurrentEpiPos].subtitle3 ??
+              ""),
+          subtitleLang1: (episodeProvider
+                  .episodeList?[showDetailsProvider.mCurrentEpiPos]
+                  .subtitleLang1 ??
+              ""),
+          subtitleLang2: (episodeProvider
+                  .episodeList?[showDetailsProvider.mCurrentEpiPos]
+                  .subtitleLang2 ??
+              ""),
+          subtitleLang3: (episodeProvider
+                  .episodeList?[showDetailsProvider.mCurrentEpiPos]
+                  .subtitleLang3 ??
+              ""),
+        );
+      }
     }
   }
+
   /* ********* Widget LIFE CYCLES ********* */
   @override
   void didChangeDependencies() {
@@ -254,6 +263,7 @@ class WebContentShowDetailsState extends State<WebContentShowDetails>
     }
     super.didPushNext();
   }
+
   /* ********* Widget LIFE CYCLES ********* */
 
   /* ********* Trailer Set-Up & Loading START ********* */
@@ -352,6 +362,7 @@ class WebContentShowDetailsState extends State<WebContentShowDetails>
       }
     }
   }
+
   /* ********* Trailer Set-Up & Loading END *********** */
 
   /* ========= Open Player ========= */
@@ -553,6 +564,7 @@ class WebContentShowDetailsState extends State<WebContentShowDetails>
       }
     }
   }
+
   /* ========= Open Player ========= */
 
   @override
@@ -1569,28 +1581,93 @@ class WebContentShowDetailsState extends State<WebContentShowDetails>
                               );
                             },
                           ),
-
-                          /* Like Button */
-                          _buildFeatureBtn(
-                            icon: 'ic_like.png',
-                            title: 'like',
-                            multilanguage: true,
-                            isRent: false,
-                            onClick: () async {
-                              printLog("Like button clicked");
-                              // Handle like functionality here
+                          Consumer<LikeProvider>(
+                            builder: (context, likeProvider, child) {
+                              bool isLiked =
+                                  likeProvider.isLiked(widget.videoId);
+                              return _buildFeatureBtn(
+                                icon: isLiked
+                                    ? 'ic_like_filled.png'
+                                    : 'ic_like.png',
+                                title: 'like',
+                                multilanguage: true,
+                                isRent: false,
+                                onClick: () async {
+                                  if (Constant.userID != null) {
+                                    await likeProvider.addRemoveLike(
+                                      widget.videoId,
+                                      widget.videoType,
+                                      widget.subVideoType,
+                                    );
+                                  } else {
+                                    await Utils.openLogin(
+                                      context: context,
+                                      newPage: widget.newPage ?? "",
+                                    );
+                                  }
+                                },
+                              );
                             },
                           ),
 
                           /* Comment Button */
-                          _buildFeatureBtn(
-                            icon: 'ic_comment.png',
-                            title: 'comment',
-                            multilanguage: true,
-                            isRent: false,
-                            onClick: () async {
-                              printLog("Comment button clicked");
-                              // Handle comment functionality here (e.g., open comment section)
+                          Consumer<CommentProvider>(
+                            builder: (context, commentProvider, child) {
+                              return _buildFeatureBtn(
+                                icon: 'ic_comment.png',
+                                title: 'comment',
+                                multilanguage: true,
+                                isRent: false,
+                                onClick: () {
+                                  if (Constant.userID != null) {
+                                    showDialog(
+                                      context: context,
+                                      builder: (context) {
+                                        TextEditingController
+                                            _commentController =
+                                            TextEditingController();
+                                        return AlertDialog(
+                                          title: const Text("Add Comment"),
+                                          content: TextField(
+                                            controller: _commentController,
+                                            decoration: const InputDecoration(
+                                                hintText: "Write a comment..."),
+                                          ),
+                                          actions: [
+                                            TextButton(
+                                              onPressed: () =>
+                                                  Navigator.pop(context),
+                                              child: const Text("Cancel"),
+                                            ),
+                                            TextButton(
+                                              onPressed: () {
+                                                if (_commentController
+                                                    .text.isNotEmpty) {
+                                                  commentProvider.addComment(
+                                                    widget.videoId,
+                                                    _commentController.text,
+                                                    widget.videoType,
+                                                    // ✅ تمرير videoType
+                                                    widget
+                                                        .subVideoType, // ✅ تمرير subVideoType
+                                                  );
+                                                  Navigator.pop(context);
+                                                }
+                                              },
+                                              child: const Text("Post"),
+                                            ),
+                                          ],
+                                        );
+                                      },
+                                    );
+                                  } else {
+                                    Utils.openLogin(
+                                      context: context,
+                                      newPage: widget.newPage ?? "",
+                                    );
+                                  }
+                                },
+                              );
                             },
                           ),
                         ],
@@ -1871,6 +1948,7 @@ class WebContentShowDetailsState extends State<WebContentShowDetails>
       );
     }
   }
+
   /* ***************** Trailer View END */
   /* ********************************** */
 

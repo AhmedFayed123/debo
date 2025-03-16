@@ -37,8 +37,12 @@ import 'package:video_player/video_player.dart';
 import 'package:visibility_detector/visibility_detector.dart';
 import 'package:youtube_player_iframe/youtube_player_iframe.dart';
 
+import '../provider/comment_provider.dart';
+import '../provider/like_provider.dart';
+
 class ContentShowDetails extends StatefulWidget {
   final int videoId, subVideoType, videoType, typeId;
+
   const ContentShowDetails(
       this.videoId, this.subVideoType, this.videoType, this.typeId,
       {super.key});
@@ -246,6 +250,7 @@ class ContentShowDetailsState extends State<ContentShowDetails>
     }
     super.didPushNext();
   }
+
   /* ********* Widget LIFE CYCLES ********* */
 
   /* ********* Trailer Set-Up & Loading START ********* */
@@ -340,6 +345,7 @@ class ContentShowDetailsState extends State<ContentShowDetails>
       }
     }
   }
+
   /* ********* Trailer Set-Up & Loading END *********** */
 
   @override
@@ -828,28 +834,81 @@ class ContentShowDetailsState extends State<ContentShowDetails>
                                   );
                                 },
                               ),
-
-                              /* Like */
-                              _buildFeatureBtn(
-                                icon: 'ic_like.png',
-                                title: 'like',
-                                multilanguage: true,
-                                isRent: false,
-                                onClick: () {
-                                  // Handle Like button click
-                                  printLog("Liked!");
+                              Consumer<LikeProvider>(
+                                builder: (context, likeProvider, child) {
+                                  bool isLiked = likeProvider.isLiked(widget.videoId);
+                                  return _buildFeatureBtn(
+                                    icon: isLiked ? 'ic_like_filled.png' : 'ic_like.png',
+                                    title: 'like',
+                                    multilanguage: true,
+                                    isRent: false,
+                                    onClick: () async {
+                                      if (Constant.userID != null) {
+                                        await likeProvider.addRemoveLike(
+                                          widget.videoId,
+                                          widget.videoType, // ✅ تمرير videoType
+                                          widget.subVideoType, // ✅ تمرير subVideoType
+                                        );
+                                      } else {
+                                        await Utils.openLogin(
+                                          context: context,
+                                          newPage: "",
+                                        );
+                                      }
+                                    },
+                                  );
                                 },
                               ),
 
+
                               /* Comment */
-                              _buildFeatureBtn(
-                                icon: 'ic_comment.png',
-                                title: 'comment',
-                                multilanguage: true,
-                                isRent: false,
-                                onClick: () {
-                                  // Handle Comment button click
-                                  printLog("Commented!");
+                              Consumer<CommentProvider>(
+                                builder: (context, commentProvider, child) {
+                                  return _buildFeatureBtn(
+                                    icon: 'ic_comment.png',
+                                    title: 'comment',
+                                    multilanguage: true,
+                                    isRent: false,
+                                    onClick: () {
+                                      if (Constant.userID != null) {
+                                        showDialog(
+                                          context: context,
+                                          builder: (context) {
+                                            TextEditingController _commentController = TextEditingController();
+                                            return AlertDialog(
+                                              title: const Text("Add Comment"),
+                                              content: TextField(
+                                                controller: _commentController,
+                                                decoration: const InputDecoration(hintText: "Write a comment..."),
+                                              ),
+                                              actions: [
+                                                TextButton(
+                                                  onPressed: () => Navigator.pop(context),
+                                                  child: const Text("Cancel"),
+                                                ),
+                                                TextButton(
+                                                  onPressed: () {
+                                                    if (_commentController.text.isNotEmpty) {
+                                                      commentProvider.addComment(
+                                                        widget.videoId,
+                                                        _commentController.text,
+                                                        widget.videoType, // ✅ تمرير videoType
+                                                        widget.subVideoType, // ✅ تمرير subVideoType
+                                                      );
+                                                      Navigator.pop(context);
+                                                    }
+                                                  },
+                                                  child: const Text("Post"),
+                                                ),
+                                              ],
+                                            );
+                                          },
+                                        );
+                                      } else {
+                                        Utils.openLogin(context: context, newPage: "");
+                                      }
+                                    },
+                                  );
                                 },
                               ),
 
@@ -1445,6 +1504,7 @@ class ContentShowDetailsState extends State<ContentShowDetails>
       );
     }
   }
+
   /* ***************** Trailer View END */
   /* ********************************** */
 
@@ -2025,6 +2085,7 @@ class ContentShowDetailsState extends State<ContentShowDetails>
       ),
     );
   }
+
   /* ========= Dialogs ========= */
 
   /* ========= Open Player ========= */
@@ -2230,5 +2291,5 @@ class ContentShowDetailsState extends State<ContentShowDetails>
       }
     }
   }
-  /* ========= Open Player ========= */
+/* ========= Open Player ========= */
 }
